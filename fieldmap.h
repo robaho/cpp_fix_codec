@@ -4,51 +4,7 @@
 #include <map>
 #include <iostream>
 #include <stdexcept>
-
-class FieldMapBuffer {
-    char buffer[4096];
-    char *offset = buffer;
-    int bytesAllocated = 0;
-public:
-    void *allocate(int n) {
-        if(offset+n >= buffer+4096) {
-            throw std::runtime_error("FieldMapBuffer exhausted");
-        }
-        auto addr = offset;
-        offset += n;
-        bytesAllocated += n;
-        return addr; 
-    }
-    void deallocate(int n) {
-        bytesAllocated -= n;
-    }
-    void reset() {
-        offset = buffer;
-        if(bytesAllocated>0) {
-            std::cout << "FieldMapBuffer leak: " << bytesAllocated << "\n";
-        }
-    }
-};
-
-template <typename T>
-class FieldMapAllocator {
-    FieldMapBuffer& buffer;
-public:
-    FieldMapAllocator(FieldMapBuffer& _buffer) : buffer(_buffer){}
-    FieldMapAllocator(const FieldMapAllocator<T>& alloc) : buffer(alloc.buffer){}
-    operator FieldMapBuffer&() const {
-        return buffer;
-    }
-
-    using value_type = T;
-
-    T* allocate(std::size_t n) {
-        return static_cast<T*>(buffer.allocate(n * sizeof(T))); 
-    }
-    void deallocate(T* p, std::size_t n) {
-        buffer.deallocate(n * sizeof(T));
-    }
-};
+#include "linkedmap.h"
 
 struct Field {
     int tag;
@@ -59,18 +15,41 @@ struct Field {
     }
     constexpr Field() : tag(0),offset(0),length(0){}
     Field(int tag,int offset,int length) : tag(tag),offset(offset),length(length){}
+    Field(const Field& other) {
+        tag = other.tag;
+        offset = other.offset;
+        length = other.length;
+    }
     static const Field EMPTY;
 };
 
-struct Group;
+class FieldMap;
+
+struct Group {
+    int tag;
+    int count;
+    std::vector<FieldMap*> groups;
+    Group(int tag,int count) : tag(tag), count(count){
+        groups.reserve(count);
+    }
+    // ~Group();
+    constexpr Group() : tag(0), count(0){}
+};
 
 typedef std::variant<Field,Group> FieldOrGroup;
 
-struct FieldMap {
+
+class FieldMap {
+friend struct Group;
     FieldMapBuffer& buffer;
-    using AllocatorType = FieldMapAllocator<std::pair<const uint32_t, FieldOrGroup>>;
-    std::map<uint32_t, FieldOrGroup, std::less<uint32_t>, AllocatorType> map;
-    FieldMap(FieldMapBuffer& buffer) : buffer(buffer), map(AllocatorType(buffer)){}
+    LinkedMap<uint32_t,FieldOrGroup> map;
+public:
+    FieldMap(FieldMapBuffer& buffer) : buffer(buffer), map(buffer){}
+    FieldMap& operator=(const FieldMap& other) {
+        map = other.map;
+        buffer = other.buffer;
+        return *this;
+    }
     void clear() { map.clear(); }
     /**
      * @brief add a group to the FieldMap
@@ -96,12 +75,3 @@ struct FieldMap {
     int getGroupSize(uint32_t tag) const;
 };
 
-struct Group {
-    int tag;
-    int count;
-    std::vector<FieldMap> groups;
-    Group(int tag,int count) : tag(tag), count(count){
-        groups.reserve(count);
-    }
-    constexpr Group() : tag(0), count(0){}
-};

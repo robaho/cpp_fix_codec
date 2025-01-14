@@ -11,7 +11,7 @@ void FixMessage::parse(const char *buffer, FixMessage &msg, GroupDefs &defs) {
     std::vector<GroupDef> msgGroups;
     std::vector<FieldMap*> stack;
 
-    FieldMap *map = &msg;
+    FieldMap *map = &msg.map;
 
     while(true) {
         if(*cp!='=') {

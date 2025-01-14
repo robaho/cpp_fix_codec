@@ -27,4 +27,6 @@ BOOST_AUTO_TEST_CASE( group_parsing ) {
     sampleToBuffer(SAMPLE_NEW_ORDER_SINGLE_WITH_GROUP,buffer);
     FixMessage::parse(buffer,msg,defs);
     BOOST_TEST(msg.getString(value(Tags::MSG_TYPE))==NEW_ORDER_SINGLE);
+    BOOST_TEST(msg.getString(100,0,55)=="AAPL");
+    BOOST_TEST(msg.getString(100,1,55)=="MSFT");
 }

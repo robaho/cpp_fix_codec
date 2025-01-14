@@ -9,11 +9,6 @@
 
 const int MAP_SIZE=1000;
 
-inline uint32_t hash( uint32_t value )
-{
-    return( value * 0xdeece66d + 0xb );
-}
-
 struct GroupDef {
     uint32_t groupCountTag;
     uint32_t groupEndTag;
@@ -34,53 +29,55 @@ public:
 };
 
 
-class FixMessage : private FieldMap {
+class FixMessage {
 private:
     const char *buffer;
     FieldMapBuffer buf;
+    FieldMap map;
 public:
-    FixMessage() : FieldMap(buf){}
+    FixMessage() : map(buf){}
     void clear() {
-        FieldMap::clear();
+        map.clear();
         buf.reset();
+        map = FieldMap(buf);
     }
     static void parse(const char* buffer,FixMessage &msg, GroupDefs &defs);
     inline int getInt(uint32_t tag) const {
-        auto field = get(tag);
+        auto field = map.get(tag);
         if(field.isEmpty()) return -999999999;
         int value=0;
         std::from_chars(buffer+field.offset,buffer+field.offset+field.length,value);
         return value;
     }
     inline std::string_view getString(uint32_t tag) const {
-        auto field = get(tag);
+        auto field = map.get(tag);
         if(field.isEmpty()) return "";
         auto start = buffer+field.offset;
         return std::string_view(start,field.length);
     }
     template<int nPlaces=7> inline Fixed<nPlaces> getFixed(uint32_t tag) const {
-        auto field = get(tag);
+        auto field = map.get(tag);
         if(field.isEmpty()) return Fixed<nPlaces>::NaN();
         auto start = buffer+field.offset;
         return Fixed(std::string_view(start,field.length));
     }
-    inline int getInt(uint32_t group, uint32_t index, uint32_t tag) const {
-        auto grp = getGroup(tag,index);
+    inline int getInt(uint32_t groupTag, uint32_t index, uint32_t tag) const {
+        auto& grp = map.getGroup(groupTag,index);
         auto field = grp.get(tag);
         if(field.isEmpty()) return -999999999;
         int value=0;
         std::from_chars(buffer+field.offset,buffer+field.offset+field.length,value);
         return value;
     }
-    inline std::string_view getString(uint32_t group, uint32_t index, uint32_t tag) const {
-        auto grp = getGroup(tag,index);
+    inline std::string_view getString(uint32_t groupTag, uint32_t index, uint32_t tag) const {
+        auto& grp = map.getGroup(groupTag,index);
         auto field = grp.get(tag);
         if(field.isEmpty()) return "";
         auto start = buffer+field.offset;
         return std::string_view(start,field.length);
     }
-    template<int nPlaces=7> inline Fixed<nPlaces> getFixed(uint32_t group, uint32_t index, uint32_t tag) const {
-        auto grp = getGroup(tag,index);
+    template<int nPlaces=7> inline Fixed<nPlaces> getFixed(uint32_t groupTag, uint32_t index, uint32_t tag) const {
+        auto& grp = map.getGroup(groupTag,index);
         auto field = grp.get(tag);
         if(field.isEmpty()) return Fixed<nPlaces>::NaN();
         auto start = buffer+field.offset;
