@@ -50,7 +50,6 @@ public:
         buffer = other.buffer;
         return *this;
     }
-    void clear() { map.clear(); }
     /**
      * @brief add a group to the FieldMap
      * 

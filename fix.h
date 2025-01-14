@@ -3,7 +3,29 @@
 
 enum class Tags {
     MSG_TYPE = 35,
-    EOM = 10
+    SENDER_COMP_ID = 49,
+    TARGET_COMP_ID = 56,
+    SENDING_TIME = 52,
+    CLORDID = 11,
+    ORDERID = 37,
+    EXECID = 17,
+    SYMBOL = 55,
+    SIDE = 54,
+    ORDER_QTY = 38,
+    PRICE = 44,
+    ORD_TYPE = 40,
+    TIME_IN_FORCE = 59,
+    TRANSACT_TIME = 60,
+    HANDL_INST = 21,
+    SECURITY_ID = 48,
+    SECURITY_ID_SOURCE = 22,
+    LAST_QTY = 32,
+    LAST_PX = 31,
+    LEAVES_QTY = 151,
+    CUM_QTY = 14,
+    AVG_PX = 6,
+    TEXT = 58,
+    CHECK_SUM = 10
 };
 
 const static std::string NEW_ORDER_SINGLE = "D";

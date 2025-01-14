@@ -27,7 +27,7 @@ public:
     V& operator[](const K key) {
         return get(key);
     }
-    void put(const K key,V value) {
+    void put(const K& key,V value) {
         if(map.contains(key)) {
             int index = map[key];
             list[index] = value;
@@ -37,7 +37,7 @@ public:
             map[key] = size;
         }
     }
-    V& get(const K key) {
+    V& get(const K& key) {
         if(!map.contains(key)) {
             int size = list.size();
             list.push_back(V());
@@ -46,18 +46,12 @@ public:
         int index = map.at(key);
         return list.at(index);
     }
-    bool contains(const K key) const {
+    bool contains(const K& key) const {
         return map.contains(key);
     }
-    V* find(const K key) const {
+    V* find(const K& key) const {
         if(!map.contains(key)) return nullptr;
         int index = map.at(key);
         return &(const_cast<V&>(list.at(index)));
-    }
-    void clear() {
-        map.clear();
-        map.rehash(0);
-        list.clear();
-        list.shrink_to_fit();
     }
 };

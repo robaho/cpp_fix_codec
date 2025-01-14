@@ -11,7 +11,7 @@ void FixMessage::parse(const char *buffer, FixMessage &msg, GroupDefs &defs) {
     std::vector<GroupDef> msgGroups;
     std::vector<FieldMap*> stack;
 
-    FieldMap *map = &msg.map;
+    FieldMap *map = msg.map;
 
     while(true) {
         if(*cp!='=') {
@@ -27,7 +27,7 @@ void FixMessage::parse(const char *buffer, FixMessage &msg, GroupDefs &defs) {
 
         map->set(tag,Field(tag,offset,length));
 
-        if(tag==value(Tags::EOM)) return;
+        if(tag==value(Tags::CHECK_SUM)) return;
         if(tag==value(Tags::MSG_TYPE)) {
             auto msgType = msg.getString(tag);
             msgGroups = defs.defs(msgType);
