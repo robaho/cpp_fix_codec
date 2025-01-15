@@ -76,6 +76,15 @@ public:
             new(&fg.field) Field(other.fg.field);
         }
     }
+    FieldOrGroup(FieldOrGroup&& other) noexcept : _group(other._group), tag(other.tag) {
+        if (_group) {
+            new(&fg.group) Group(std::move(other.fg.group));
+        } else {
+            new(&fg.field) Field(std::move(other.fg.field));
+        }
+        other._group = false;
+        other.tag = 0;
+    }
     FieldOrGroup& operator=(const FieldOrGroup& other) {
         if (this != &other) {
             if (_group) {
@@ -98,9 +107,7 @@ public:
 class FieldList {
   private:
     using AllocatorType = FieldMapAllocator<std::pair<const uint32_t,FieldOrGroup>>;
-
     std::map<uint32_t,FieldOrGroup,std::less<uint32_t>,AllocatorType> list;
-
   public:
     FieldList(FieldMapBuffer &buffer) : list(AllocatorType(buffer)) {
     }
