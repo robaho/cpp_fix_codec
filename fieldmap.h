@@ -76,59 +76,54 @@ public:
             new(&fg.field) Field(other.fg.field);
         }
     }
+    FieldOrGroup& operator=(const FieldOrGroup& other) {
+        if (this != &other) {
+            if (_group) {
+                fg.group.~Group();
+            } else {
+                fg.field.~Field();
+            }
+            _group = other._group;
+            tag = other.tag;
+            if (_group) {
+                new(&fg.group) Group(other.fg.group);
+            } else {
+                new(&fg.field) Field(other.fg.field);
+            }
+        }
+        return *this;
+    }
 };
 
 class FieldList {
-    // TODO: possibly add hash map for quicker indexed lookup of fields, but the
-    // structure is so small that the linear search is often best
   private:
-    using VecAllocatorType = FieldMapAllocator<FieldOrGroup>;
+    using AllocatorType = FieldMapAllocator<std::pair<const uint32_t,FieldOrGroup>>;
 
-    std::vector<FieldOrGroup, VecAllocatorType> list;
+    std::map<uint32_t,FieldOrGroup,std::less<uint32_t>,AllocatorType> list;
 
   public:
-    FieldList(FieldMapBuffer &buffer) : list(VecAllocatorType(buffer)) {
-        list.reserve(16);
+    FieldList(FieldMapBuffer &buffer) : list(AllocatorType(buffer)) {
     }
 
     // add or replace a field/group in the list
     FieldOrGroup &put(const FieldOrGroup &fg) {
-        for (auto itr = list.begin(); itr != list.end(); itr++) {
-            if (itr->tag == fg.tag) {
-              *itr = std::move(fg);
-              return *itr;
-            }
-        }
-        list.push_back(std::move(fg));
-        return list.back();
+        auto pair = list.insert_or_assign(fg.tag,fg);
+        return pair.first->second;
     }
 
     // get a field/group in the list by tag, or throw exception if it does not exist
     FieldOrGroup &get(const uint32_t tag) {
-        for (auto itr = list.begin(); itr != list.end(); itr++) {
-            if (itr->tag == tag) {
-              return *itr;
-            }
-        }
-        throw std::runtime_error("tag does not exist");
+        return list.at(tag);
     }
     // determine if a field/group is in the list
     bool contains(const uint32_t tag) const {
-        for (auto itr = list.begin(); itr != list.end(); itr++) {
-            if (itr->tag == tag) {
-              return true;
-            }
-        }
-        return false;
+        return list.contains(tag);
     }
     // find a field/group is in the list
     FieldOrGroup *find(const uint32_t tag) const {
-        for (auto itr = list.begin(); itr != list.end(); itr++) {
-            if (itr->tag == tag) {
-              return const_cast<FieldOrGroup *>(&(*itr));
-            }
-        }
-        return nullptr;
+        auto itr = list.find(tag);
+        if(itr==list.end()) return nullptr;
+        return const_cast<FieldOrGroup*>(&itr->second);
     }
 };
 
