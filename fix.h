@@ -25,6 +25,7 @@ enum class Tags {
     CUM_QTY = 14,
     AVG_PX = 6,
     TEXT = 58,
+    BODY_LENGTH = 9,
     CHECK_SUM = 10
 };
 

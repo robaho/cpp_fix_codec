@@ -3,13 +3,15 @@
 #include <memory>
 #include <iostream>
 
-class FieldMapBuffer {
-    char buffer[8192];
+class FixBuffer {
+    char* buffer;
     char *offset = buffer;
     int bytesAllocated = 0;
 public:
+    const int length;
+    FixBuffer(int length) : buffer((char*)malloc(length)), length(length){}
     void *allocate(int n) {
-        if(offset+n >= buffer+sizeof(buffer)) {
+        if(offset+n >= buffer+length) {
             throw std::runtime_error("FieldMapBuffer exhausted");
         }
         auto addr = offset;
@@ -32,12 +34,12 @@ public:
 };
 
 template <typename T>
-class FieldMapAllocator {
-    FieldMapBuffer& buffer;
+class FixAllocator {
+    FixBuffer& buffer;
 public:
-    FieldMapAllocator(FieldMapBuffer& _buffer) : buffer(_buffer){}
-    FieldMapAllocator(const FieldMapAllocator<T>& alloc) : buffer(alloc.buffer){}
-    operator FieldMapBuffer&() const {
+    FixAllocator(FixBuffer& _buffer) : buffer(_buffer){}
+    FixAllocator(const FixAllocator<T>& alloc) : buffer(alloc.buffer){}
+    operator FixBuffer&() const {
         return buffer;
     }
 

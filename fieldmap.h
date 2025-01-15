@@ -8,7 +8,7 @@
 #include <variant>
 #include <vector>
 
-#include "fieldmap_alloc.h"
+#include "fix_alloc.h"
 
 struct Field {
     uint32_t tag;
@@ -115,12 +115,12 @@ public:
 class FieldList {
     // using linear search
   private:
-    using VecAllocatorType = FieldMapAllocator<FieldOrGroup>;
+    using VecAllocatorType = FixAllocator<FieldOrGroup>;
 
     std::vector<FieldOrGroup, VecAllocatorType> list;
 
   public:
-    FieldList(FieldMapBuffer &buffer) : list(VecAllocatorType(buffer)) {
+    FieldList(FixBuffer &buffer) : list(VecAllocatorType(buffer)) {
         list.reserve(16);
     }
 
@@ -217,10 +217,10 @@ class FieldList {
 
 class FieldMap {
 friend struct Group;
-    FieldMapBuffer& buffer;
+    FixBuffer& buffer;
     FieldList map;
 public:
-    FieldMap(FieldMapBuffer& buffer) : buffer(buffer), map(buffer){}
+    FieldMap(FixBuffer& buffer) : buffer(buffer), map(buffer){}
     /**
      * @brief add a group to the FieldMap
      * 

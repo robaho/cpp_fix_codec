@@ -4,7 +4,7 @@
 #include "fieldmap.h"
 
 BOOST_AUTO_TEST_CASE( basic_test ) {
-    FieldMapBuffer buffer;
+    FixBuffer buffer(2048);
     FieldMap fm(buffer);
 
     fm.set(100,Field(100,101,102));
@@ -16,7 +16,7 @@ BOOST_AUTO_TEST_CASE( basic_test ) {
 
 
 BOOST_AUTO_TEST_CASE( basic_groups ) {
-    FieldMapBuffer buffer;
+    FixBuffer buffer(2048);
     FieldMap fm(buffer);
 
     fm.set(100,Field(100,101,102));

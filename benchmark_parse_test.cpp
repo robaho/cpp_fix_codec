@@ -16,9 +16,13 @@ static const int N_MSGS = 1000000;
 void parseMessages(const char *text,GroupDefs &defs) {
     FixMessage msg;
 
+    std::istringstream ss(text);
+
     auto start = std::chrono::system_clock::now();
     for(int i=0;i<N_MSGS;i++) {
-        FixMessage::parse(text,msg,defs);
+        FixMessage::parse(ss,msg,defs);
+        ss.str(text);
+        ss.clear();
     }
     auto end = std::chrono::system_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end-start);

@@ -5,13 +5,16 @@
 #include <map>
 #include <string_view>
 #include <charconv>
+#include <istream>
 #include "fixed.h"
 #include "fieldmap.h"
 
 const int MAP_SIZE=1000;
 
 struct GroupDef {
+    // the tag that holds the "start of group" count
     uint32_t groupCountTag;
+    // the tag that ends the group
     uint32_t groupEndTag;
 };
 
@@ -32,18 +35,24 @@ public:
 
 class FixMessage {
 private:
-    const char *buffer;
-    FieldMapBuffer buf;
+    char *buffer;
+    FixBuffer buf;
     FieldMap *map;
 public:
-    FixMessage() {
+    FixMessage() : buf(8192) {
+        map = new ((FieldMap*)buf.allocate(sizeof(FieldMap))) FieldMap(buf);
+    }
+    FixMessage(int bufferSize) : buf(bufferSize) {
         map = new ((FieldMap*)buf.allocate(sizeof(FieldMap))) FieldMap(buf);
     }
     void clear() {
         buf.reset();
         map = new ((FieldMap*)buf.allocate(sizeof(FieldMap))) FieldMap(buf);
     }
-    static void parse(const char* buffer,FixMessage &msg, GroupDefs &defs);
+    // parse next message from istream, any string_view from previous parse are invalid
+    static void parse(std::istream &in,FixMessage &msg, GroupDefs &defs);
+    // convience method for testing to parse parse a message from a buffer, delegates to parse using istream
+    static void parse(const char* in,FixMessage &msg, GroupDefs &defs);
     inline int getInt(uint32_t tag) const {
         auto field = map->get(tag);
         if(field.isEmpty()) return -999999999;

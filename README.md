@@ -7,3 +7,29 @@ It uses [cpp_fixed](https://github.com/robaho/cpp_fixed) to perform fixed decima
 ## Building
 
 Remove `fixed.h` , and run `make all` to obtain the latest version of the fixed point decimal library.
+
+The project builds by default using `make` and CLang. There is a `Makefile.gcc` for building using GCC.
+
+## Design
+
+The library is extremely low-level, designed for performance first. There is no automated FIX metadata. The
+consumer is responsible for defining the group layout of the messages it uses.
+
+A custom arena based memory allocator is used, and any dynamic memory is reused when parsing the next message.
+
+Nested groups are fully supported.
+
+## Performance
+
+Using a 4 GHz Quad-Core Intel Core i7:
+
+The library can parse nearly 2M messages a second from a single istream. An istream is almost always required
+because the FIX connection is over TCP and the messages are not delineated.
+
+Parsing messages with groups slows the parsing by 2x.
+
+After parsing, the accessing of fields is performed at more than 55M a second.
+
+## ToDo
+
+Fix message creation is in the works.
