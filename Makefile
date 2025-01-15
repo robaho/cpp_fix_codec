@@ -11,11 +11,11 @@ TEST_MAINS = $(addprefix bin/, $(TEST_SRCS:.cpp=))
 
 HEADERS = ${wildcard *.h} fixed.h
 
-SRCS = fix_codec.cpp fieldmap.cpp
+SRCS = fix_parser.cpp fieldmap.cpp
 
 OBJS = $(addprefix bin/, $(SRCS:.cpp=.o))
 
-MAIN = bin/fix_codec_test
+MAIN = bin/fix_parser_test
 MAIN_OBJ = ${basename ${MAIN}}.o
 
 LIB = bin/fix.a

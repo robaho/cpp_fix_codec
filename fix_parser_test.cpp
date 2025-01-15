@@ -3,7 +3,7 @@
 
 #include "fix.h"
 #include "fixed.h"
-#include "fix_codec.h"
+#include "fix_parser.h"
 #include "samples.h"
 
 BOOST_AUTO_TEST_CASE( basic_parsing ) {

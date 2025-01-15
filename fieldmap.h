@@ -1,5 +1,6 @@
 #pragma once
 
+#include <_types/_uint32_t.h>
 #include <cstdint>
 #include <map>
 #include <iostream>
@@ -104,7 +105,78 @@ public:
     }
 };
 
+// a linear search actually performs better than a binary search for both
+// parsing and access since the locality is near perfect, and the message sizes
+// are often small
+
+#define LINEAR_SEARCH
+
+#ifdef LINEAR_SEARCH
 class FieldList {
+    // using linear search
+  private:
+    using VecAllocatorType = FieldMapAllocator<FieldOrGroup>;
+
+    std::vector<FieldOrGroup, VecAllocatorType> list;
+
+  public:
+    FieldList(FieldMapBuffer &buffer) : list(VecAllocatorType(buffer)) {
+        list.reserve(16);
+    }
+
+    // add or replace a field/group in the list
+    FieldOrGroup &put(const FieldOrGroup &fg) {
+        for (auto itr = list.begin(); itr != list.end(); itr++) {
+            if (itr->tag == fg.tag) {
+              *itr = std::move(fg);
+              return *itr;
+            }
+        }
+        list.push_back(std::move(fg));
+        return list.back();
+    }
+
+    // get a field/group in the list by tag, or throw exception if it does not exist
+    FieldOrGroup &get(const uint32_t tag) {
+        for (auto itr = list.begin(); itr != list.end(); itr++) {
+            if (itr->tag == tag) {
+              return *itr;
+            }
+        }
+        throw std::runtime_error("tag does not exist");
+    }
+    // determine if a field/group is in the list
+    bool contains(const uint32_t tag) const {
+        for (auto itr = list.begin(); itr != list.end(); itr++) {
+            if (itr->tag == tag) {
+              return true;
+            }
+        }
+        return false;
+    }
+    // find a field/group is in the list
+    FieldOrGroup *find(const uint32_t tag) const {
+        for (auto itr = list.begin(); itr != list.end(); itr++) {
+            if (itr->tag == tag) {
+              return const_cast<FieldOrGroup *>(&(*itr));
+            }
+        }
+        return nullptr;
+    }
+    std::vector<uint32_t> tags() const {
+        std::vector<uint32_t> tags;
+        tags.reserve(list.size());
+        for(auto field : list) {
+            tags.push_back(field.tag);
+        }
+        return tags;
+    }
+
+};
+
+#else
+class FieldList {
+    // using sorted map
   private:
     using AllocatorType = FieldMapAllocator<std::pair<const uint32_t,FieldOrGroup>>;
     std::map<uint32_t,FieldOrGroup,std::less<uint32_t>,AllocatorType> list;
@@ -132,7 +204,16 @@ class FieldList {
         if(itr==list.end()) return nullptr;
         return const_cast<FieldOrGroup*>(&itr->second);
     }
+    std::vector<uint32_t> tags() const {
+        std::vector<uint32_t> tags;
+        tags.reserve(list.size());
+        for(auto field : list) {
+            tags.push_back(field.first);
+        }
+        return tags;
+    }
 };
+#endif
 
 class FieldMap {
 friend struct Group;
@@ -162,5 +243,8 @@ public:
     int getGroupCount(uint32_t tag) const;
     // returns the number of groups added 
     int getGroupSize(uint32_t tag) const;
+    std::vector<uint32_t> tags() const {
+        return map.tags();
+    }
 };
 

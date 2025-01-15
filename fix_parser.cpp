@@ -1,5 +1,5 @@
 #include "fix.h"
-#include "fix_codec.h"
+#include "fix_parser.h"
 
 void FixMessage::parse(const char *buffer, FixMessage &msg, GroupDefs &defs) {
     msg.buffer = buffer;

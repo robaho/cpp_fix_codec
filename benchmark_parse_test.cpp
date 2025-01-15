@@ -8,7 +8,7 @@
 #include <array>
 
 #include "fix.h"
-#include "fix_codec.h"
+#include "fix_parser.h"
 #include "samples.h"
 
 static const int N_MSGS = 1000000;

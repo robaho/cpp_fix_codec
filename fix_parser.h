@@ -1,3 +1,4 @@
+#include <_types/_uint32_t.h>
 #include <cstdint>
 #include <variant>
 #include <vector>
@@ -83,5 +84,12 @@ public:
         if(field.isEmpty()) return Fixed<nPlaces>::NaN();
         auto start = buffer+field.offset;
         return Fixed(std::string_view(start,field.length));
+    }
+    std::vector<uint32_t> getTags() const {
+        return map->tags();
+    }
+    std::vector<uint32_t> getTags(uint32_t groupTag, int index) const {
+        auto& grp = map->getGroup(groupTag,index);
+        return grp.tags();
     }
 };
