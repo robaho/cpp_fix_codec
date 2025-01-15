@@ -30,6 +30,8 @@ Parsing messages with groups slows the parsing by 2x.
 
 After parsing, the accessing of fields is performed at more than 55M a second.
 
+See the [benchmarks](https://github.com/robaho/cpp_fix_codec/blob/main/benchmark_parse_test.cpp)
+
 ## ToDo
 
 Fix message creation is in the works.
