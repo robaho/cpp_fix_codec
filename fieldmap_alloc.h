@@ -15,7 +15,7 @@ public:
         auto addr = offset;
         offset += n;
         bytesAllocated += n;
-        memset(addr,0,n);
+        // memset(addr,0,n);
         // std::cout << "allocated at " << static_cast<void *>(addr) << ", bytes " << n << "\n";
         return addr; 
     }

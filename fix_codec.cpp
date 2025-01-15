@@ -42,6 +42,7 @@ void FixMessage::parse(const char *buffer, FixMessage &msg, GroupDefs &defs) {
             if(itr->groupEndTag == tag) {
                 auto parent = stack.back();
                 if(parent->getGroupCount(itr->groupCountTag) == parent->getGroupSize(itr->groupCountTag)) {
+                    // received all expected groups, so go back a level
                     stack.pop_back();
                     map = parent;
                 } else {

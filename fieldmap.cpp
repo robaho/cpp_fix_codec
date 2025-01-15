@@ -5,6 +5,7 @@
 #include <sstream>
 
 const Field Field::EMPTY = Field();
+const Group Group::EMPTY = Group();
 
 // Group::~Group() {
 //     for(auto itr=groups.begin();itr!=groups.end();itr++) {
@@ -16,67 +17,65 @@ const Field Field::EMPTY = Field();
 
 FieldMap& FieldMap::addGroup(uint32_t tag) {
     auto itr = map.find(tag);
-    if(itr==nullptr || !std::holds_alternative<Group>(*itr)) {
-        auto& tmp = map[tag] = Group(tag,1);
-        // FieldMap *obj = (FieldMap*)buffer.allocate(sizeof(FieldMap));
-        std::get<Group>(tmp).groups.push_back(new FieldMap(buffer));
-        auto& grp = std::get<Group>(tmp);
-        return *grp.groups.at(0);
+    if(itr==nullptr || !itr->isGroup()) {
+        auto& grp = map.put({Field::EMPTY,Group(tag, 1),tag}).group;
+        FieldMap *obj = (FieldMap*)buffer.allocate(sizeof(FieldMap));
+        grp.groups->push_back(new (obj) FieldMap(buffer));
+        return *grp.groups->at(0);
     }
-    auto& grp = std::get<Group>(*itr);
+    auto& grp = itr->group;
     // FieldMap *obj = (FieldMap*)buffer.allocate(sizeof(FieldMap));
-    grp.groups.push_back(new FieldMap(buffer));
-    return *grp.groups.back();
+    grp.groups->push_back(new FieldMap(buffer));
+    return *grp.groups->back();
 }
 FieldMap& FieldMap::addGroup(uint32_t tag,int count) {
     auto itr = map.find(tag);
-    if(itr==nullptr || !std::holds_alternative<Group>(*itr)) {
-        auto& tmp = map[tag] = Group(tag,count);
-        // FieldMap *obj = (FieldMap*)buffer.allocate(sizeof(FieldMap));
-        std::get<Group>(tmp).groups.push_back(new FieldMap(buffer));
-        auto& grp = std::get<Group>(tmp);
-        return *grp.groups.at(0);
+    if(itr==nullptr || !itr->isGroup()) {
+        auto& grp = map.put({Field::EMPTY,Group(tag,count),tag}).group;
+        FieldMap *obj = (FieldMap*)buffer.allocate(sizeof(FieldMap));
+        grp.groups->push_back(new (obj) FieldMap(buffer));
+        return *grp.groups->at(0);
     }
-    auto& grp = std::get<Group>(*itr);
-    // FieldMap *obj = (FieldMap*)buffer.allocate(sizeof(FieldMap));
-    grp.groups.push_back(new FieldMap(buffer));
-    return *grp.groups.back();
+    auto& grp = itr->group;
+    FieldMap *obj = (FieldMap*)buffer.allocate(sizeof(FieldMap));
+    grp.groups->push_back(new (obj) FieldMap(buffer));
+    return *grp.groups->back();
 }
 void FieldMap::set(uint32_t tag, Field field){
-    map.put(tag,field);
+    map.put({field,Group::EMPTY,tag});
 }
 Field FieldMap::get(uint32_t tag) const {
     auto tmp = map.find(tag);
-    if(tmp!=nullptr && std::holds_alternative<Field>(*tmp)) {
-        return std::get<Field>(*tmp);
+    if(tmp!=nullptr && tmp->isField()) {
+        return tmp->field;
     } else {
         return Field::EMPTY;
     }
 }
 const FieldMap& FieldMap::getGroup(uint32_t tag,int index) const {
     auto itr = map.find(tag);
-    if(itr==nullptr || !std::holds_alternative<Group>(*itr)) {
+    if(itr==nullptr || !itr->isGroup()) {
         std::ostringstream oss;
         oss << "tag " << tag << " is not a group";
         throw std::runtime_error(oss.str());
     }
-    return *std::get<Group>(*itr).groups.at(index);
+    return *itr->group.groups->at(index);
 }
 int FieldMap::getGroupCount(uint32_t tag) const {
     auto tmp = map.find(tag);
-    if(tmp==nullptr || !std::holds_alternative<Group>(*tmp)) {
+    if(tmp==nullptr || !tmp->isGroup()) {
         std::ostringstream oss;
         oss << "tag " << tag << " is not a group";
         throw std::runtime_error(oss.str());
     }
-    return std::get<Group>(*tmp).count;
+    return tmp->group.count;
 }
 int FieldMap::getGroupSize(uint32_t tag) const {
     auto tmp = map.find(tag);
-    if(tmp==nullptr || !std::holds_alternative<Group>(*tmp)) {
+    if(tmp==nullptr || !tmp->isGroup()) {
         std::ostringstream oss;
         oss << "tag " << tag << " is not a group";
         throw std::runtime_error(oss.str());
     }
-    return std::get<Group>(*tmp).groups.size();
+    return tmp->group.groups->size();
 }
