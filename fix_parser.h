@@ -19,17 +19,19 @@ struct GroupDef {
 };
 
 class GroupDefs {
-    std::map<std::string_view,std::vector<GroupDef>> _defs;
+    std::map<const std::string_view,std::vector<GroupDef>> _defs;
 public:
-    void add(std::string_view msgType, GroupDef def) {
-        _defs[msgType] = { def };
-    }    
-    void add(std::string_view msgType, std::vector<GroupDef> defs) {
+    void add(const std::string_view msgType, const GroupDef def) {
+        auto vec = {def};
+        _defs[msgType] = vec;
+    } 
+    void add(const std::string_view msgType, std::vector<GroupDef> defs) {
         _defs[msgType] = defs;
     } 
-    std::vector<GroupDef> defs(std::string_view msgType) {
-        return _defs[msgType];
-    }   
+    const std::vector<GroupDef>* defs(const std::string_view& msgType) const {
+        auto itr = _defs.find(msgType);
+        return itr==_defs.end() ? nullptr : &itr->second;
+    }
 };
 
 
@@ -50,14 +52,13 @@ public:
         map = new ((FieldMap*)buf.allocate(sizeof(FieldMap))) FieldMap(buf);
     }
     // parse next message from istream, any string_view from previous parse are invalid
-    static void parse(std::istream &in,FixMessage &msg, GroupDefs &defs);
+    static void parse(std::istream &in,FixMessage &msg, const GroupDefs &defs);
     // convience method for testing to parse parse a message from a buffer, delegates to parse using istream
-    static void parse(const char* in,FixMessage &msg, GroupDefs &defs);
+    static void parse(const char* in,FixMessage &msg, const GroupDefs &defs);
     inline int getInt(uint32_t tag) const {
         auto field = map->get(tag);
         if(field.isEmpty()) return -999999999;
-        int value=0;
-        std::from_chars(buffer+field.offset,buffer+field.offset+field.length,value);
+        int value=parseInt(buffer+field.offset,buffer+field.offset+field.length);
         return value;
     }
     inline std::string_view getString(uint32_t tag) const {
@@ -76,8 +77,7 @@ public:
         auto& grp = map->getGroup(groupTag,index);
         auto field = grp.get(tag);
         if(field.isEmpty()) return -999999999;
-        int value=0;
-        std::from_chars(buffer+field.offset,buffer+field.offset+field.length,value);
+        int value=parseInt(buffer+field.offset,buffer+field.offset+field.length);
         return value;
     }
     inline std::string_view getString(uint32_t groupTag, uint32_t index, uint32_t tag) const {

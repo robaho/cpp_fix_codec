@@ -1,16 +1,16 @@
 #include <iostream>
 #include <sstream>
 #include <stdexcept>
+#include <strstream>
 
 #include "fix.h"
 #include "fix_parser.h"
 
-void FixMessage::parse(const char* in, FixMessage &msg, GroupDefs &defs) {
-    auto ss = std::istringstream(in);
-    return parse(ss,msg,defs);
+void FixMessage::parse(const char* in, FixMessage &msg, const GroupDefs &defs) {
+    std::istrstream is(in);
+    return parse(is,msg,defs);
 }
-
-void FixMessage::parse(std::istream& in, FixMessage &msg, GroupDefs &defs) {
+void FixMessage::parse(std::istream& in, FixMessage &msg, const GroupDefs &defs) {
     msg.clear();
 
     char* buffer = msg.buffer = (char*)msg.buf.allocate(msg.buf.length/4);
@@ -18,7 +18,7 @@ void FixMessage::parse(std::istream& in, FixMessage &msg, GroupDefs &defs) {
     char *end = buffer;
     char* cp = buffer;
 
-    std::vector<GroupDef> msgGroups;
+    const std::vector<GroupDef>* msgGroups = nullptr;
     std::vector<FieldMap*> stack;
 
     FieldMap *map = msg.map;
@@ -35,8 +35,7 @@ void FixMessage::parse(std::istream& in, FixMessage &msg, GroupDefs &defs) {
         if(*cp!='=') {
             cp++; continue;
         }
-        int tag;
-        std::from_chars(start,cp,tag);
+        int tag = parseInt(start,cp);
         cp++;
         start=cp;
         if(cp==end) {
@@ -74,7 +73,9 @@ void FixMessage::parse(std::istream& in, FixMessage &msg, GroupDefs &defs) {
             msgGroups = defs.defs(msgType);
         }
 
-        for(auto itr = msgGroups.begin(); itr!=msgGroups.end(); itr++) {
+        if(msgGroups==nullptr) goto next;
+
+        for(auto itr = msgGroups->begin(); itr!=msgGroups->end(); itr++) {
             if(itr->groupCountTag == tag) {
                 stack.push_back(map);
                 auto& tmp = map->addGroup(tag,msg.getInt(tag));
@@ -93,7 +94,7 @@ void FixMessage::parse(std::istream& in, FixMessage &msg, GroupDefs &defs) {
                 }
             }
         }
-        
+next:        
         cp++;
         start = cp;
     }

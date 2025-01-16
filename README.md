@@ -23,10 +23,10 @@ Nested groups are fully supported.
 
 Using a 4 GHz Quad-Core Intel Core i7:
 
-The library can parse nearly 2M messages a second from a single istream. An istream is almost always required
+The library can parse nearly 2.2M messages a second from a single istream. An istream is almost always required
 because the FIX connection is over TCP and the messages are not delineated.
 
-Parsing messages with groups slows the parsing by 2x.
+Parsing messages with groups slows the parsing by 10%.
 
 After parsing, the accessing of fields is performed at more than 55M a second.
 

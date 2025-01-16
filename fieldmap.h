@@ -30,16 +30,17 @@ struct Field {
 class FieldMap;
 
 struct Group {
-    uint32_t tag;
-    int count;
-    std::vector<FieldMap*> *groups;
-    Group(uint32_t tag,int count) : tag(tag), count(count){
-        groups = new std::vector<FieldMap*>();
-        groups->reserve(count);
+    const uint32_t tag;
+    const int count;
+    // linked via 'next' property in FieldMap
+    FieldMap* const groups;
+    int size;
+    Group(uint32_t tag,int count,FieldMap* group) : tag(tag), count(count), groups(group){
+        size=1;
     }
-    // ~Group();
-    constexpr Group() : tag(0), count(0), groups(nullptr){}
+    constexpr Group() : tag(0), count(0), groups(nullptr) {}
     static const Group EMPTY;
+    FieldMap* group(int n) const;
 };
 
 struct FieldOrGroup {
@@ -58,7 +59,7 @@ public:
     bool isField() {
         return !_group;
     }
-    const Group& group() {
+    Group& group() {
         return fg.group;
     }
     const Field& field() {
@@ -219,6 +220,8 @@ class FieldMap {
 friend struct Group;
     FixBuffer& buffer;
     FieldList map;
+    // next allows for efficient linking in a Group
+    FieldMap *next = nullptr;
 public:
     FieldMap(FixBuffer& buffer) : buffer(buffer), map(buffer){}
     /**
@@ -247,4 +250,16 @@ public:
         return map.tags();
     }
 };
+
+static inline int parseInt(const char *start,const char* endExclusive) {
+    int value=0;
+    bool negate=false;
+    if(*start=='-') { negate=true; start++; }
+    while(start!=endExclusive) {
+        value *= 10;
+        value += *start - '0';
+        start++;
+    }
+    return negate ? value * -1 : value;
+}
 
