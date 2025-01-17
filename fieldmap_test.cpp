@@ -5,7 +5,7 @@
 
 BOOST_AUTO_TEST_CASE( basic_test ) {
     FixBuffer buffer(2048);
-    FieldMap fm(buffer);
+    FieldMap fm(buffer,nullptr);
 
     fm.set(100,Field(100,101,102));
     fm.set(200,Field(200,201,202));
@@ -17,10 +17,11 @@ BOOST_AUTO_TEST_CASE( basic_test ) {
 
 BOOST_AUTO_TEST_CASE( basic_groups ) {
     FixBuffer buffer(2048);
-    FieldMap fm(buffer);
+    FieldMap fm(buffer,nullptr);
 
     fm.set(100,Field(100,101,102));
     fm.set(200,Field(200,201,202));
+    fm.set(299,Field(299,251,252));
     
     auto& gm = fm.addGroup(299);
     gm.set(300,Field(300,301,302));

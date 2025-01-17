@@ -37,12 +37,12 @@ int main(int argc, char **argv) {
   char buffer[4096];
   GroupDefs defs;
   std::cout << "New Order Single: ";
-  sampleToBuffer(SAMPLE_NEW_ORDER_SINGLE, buffer);
+  decodeFixToBuffer(SAMPLE_NEW_ORDER_SINGLE, buffer);
   parseMessages(buffer, defs);
 
   defs.add(NEW_ORDER_SINGLE, {100, 54});
 
   std::cout << "New Order Single w/Groups: ";
-  sampleToBuffer(SAMPLE_NEW_ORDER_SINGLE_WITH_GROUP, buffer);
+  decodeFixToBuffer(SAMPLE_NEW_ORDER_SINGLE_WITH_GROUP, buffer);
   parseMessages(buffer, defs);
 }

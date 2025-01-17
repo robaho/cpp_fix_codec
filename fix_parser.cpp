@@ -11,12 +11,15 @@ void FixMessage::parse(const char* in, FixMessage &msg, const GroupDefs &defs) {
     return parse(is,msg,defs);
 }
 void FixMessage::parse(std::istream& in, FixMessage &msg, const GroupDefs &defs) {
-    msg.clear();
+    msg.buf.reset();
 
-    char* buffer = msg.buffer = (char*)msg.buf.allocate(msg.buf.length/4);
-    char* start = buffer;
-    char *end = buffer;
-    char* cp = buffer;
+    // msgBytes is filled in as the data is read from the stream
+    char* msgBytes = (char*)msg.buf.allocate(msg.buf.length/4);
+    msg.reset(msgBytes);
+
+    char* start = msgBytes;
+    char *end = msgBytes;
+    char* cp = msgBytes;
 
     const std::vector<GroupDef>* msgGroups = nullptr;
     std::vector<FieldMap*> stack;
@@ -49,10 +52,10 @@ void FixMessage::parse(std::istream& in, FixMessage &msg, const GroupDefs &defs)
                 end++;
             }
         }
-        int offset = start-buffer;
+        int offset = start-msgBytes;
         int length = cp-start;
 
-        if(tag==value(Tags::CHECK_SUM)) {
+        if(tag==tagValue(Tags::CHECK_SUM)) {
             if(end-cp!=1) {
                 throw std::runtime_error("invalid state, buffered data not read");
             }
@@ -61,19 +64,23 @@ void FixMessage::parse(std::istream& in, FixMessage &msg, const GroupDefs &defs)
 
         map->set(tag,Field(tag,offset,length));
 
-        if(tag==value(Tags::BODY_LENGTH)) {
-            // the body length does not include the 10=x^A portion which must be included
-            auto length = msg.getInt(tag);
-            int toread = (length+5) - (end-cp); // remove any data already buffered
+        if(tag==tagValue(Tags::BODY_LENGTH)) {
+            // the body length does not include the 10=NNN^A portion which must be included
+            auto bodyLength = msg.getInt(tag);
+            int toread = (bodyLength+7) - (end-cp); // remove any data already buffered
             if(!in.read(end, toread)) return;
             end+=toread;
         }
-        if(tag==value(Tags::MSG_TYPE)) {
+        if(tag==tagValue(Tags::MSG_TYPE)) {
             auto msgType = msg.getString(tag);
             msgGroups = defs.defs(msgType);
         }
 
-        if(msgGroups==nullptr) goto next;
+        // skip end of field marker
+        cp++;
+        start = cp;
+
+        if(msgGroups==nullptr) continue;
 
         for(auto itr = msgGroups->begin(); itr!=msgGroups->end(); itr++) {
             if(itr->groupCountTag == tag) {
@@ -84,7 +91,9 @@ void FixMessage::parse(std::istream& in, FixMessage &msg, const GroupDefs &defs)
             if(itr->groupEndTag == tag) {
                 if(stack.empty()) continue;
                 auto parent = stack.back();
-                if(parent->getGroupCount(itr->groupCountTag) == parent->getGroupSize(itr->groupCountTag)) {
+                auto field = parent->get(itr->groupCountTag);
+                if(field.isEmpty()) continue;
+                if(parent->getInt(field) == field.groupCount()) {
                     // received all expected groups, so go back a level
                     stack.pop_back();
                     map = parent;
@@ -94,8 +103,5 @@ void FixMessage::parse(std::istream& in, FixMessage &msg, const GroupDefs &defs)
                 }
             }
         }
-next:        
-        cp++;
-        start = cp;
     }
 }

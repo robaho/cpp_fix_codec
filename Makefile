@@ -11,7 +11,7 @@ TEST_MAINS = $(addprefix bin/, $(TEST_SRCS:.cpp=))
 
 HEADERS = ${wildcard *.h} fixed.h
 
-SRCS = fix_parser.cpp fieldmap.cpp
+SRCS = fix_parser.cpp fieldmap.cpp fix_builder.cpp
 
 OBJS = $(addprefix bin/, $(SRCS:.cpp=.o))
 

@@ -9,8 +9,6 @@
 #include "fixed.h"
 #include "fieldmap.h"
 
-const int MAP_SIZE=1000;
-
 struct GroupDef {
     // the tag that holds the "start of group" count
     uint32_t groupCountTag;
@@ -35,70 +33,24 @@ public:
 };
 
 
-class FixMessage {
+class FixMessage : public FieldAccessor {
 private:
-    char *buffer;
     FixBuffer buf;
+    const char *msgBytes;
     FieldMap *map;
+    void reset(const char * msg) {
+        msgBytes = msg;
+        map = new ((FieldMap*)buf.allocate(sizeof(FieldMap))) FieldMap(buf,msgBytes);
+        FieldAccessor::reset(map);
+    }
 public:
-    FixMessage() : buf(8192) {
-        map = new ((FieldMap*)buf.allocate(sizeof(FieldMap))) FieldMap(buf);
-    }
-    FixMessage(int bufferSize) : buf(bufferSize) {
-        map = new ((FieldMap*)buf.allocate(sizeof(FieldMap))) FieldMap(buf);
-    }
-    void clear() {
-        buf.reset();
-        map = new ((FieldMap*)buf.allocate(sizeof(FieldMap))) FieldMap(buf);
+    FixMessage() : FixMessage(2048) {}
+    FixMessage(int maxMessageSize) : buf(maxMessageSize*4), msgBytes((char*)buf.allocate(maxMessageSize)) {
+        map = new ((FieldMap*)buf.allocate(sizeof(FieldMap))) FieldMap(buf,msgBytes);
+        FieldAccessor::reset(map);
     }
     // parse next message from istream, any string_view from previous parse are invalid
     static void parse(std::istream &in,FixMessage &msg, const GroupDefs &defs);
     // convience method for testing to parse parse a message from a buffer, delegates to parse using istream
     static void parse(const char* in,FixMessage &msg, const GroupDefs &defs);
-    inline int getInt(uint32_t tag) const {
-        auto field = map->get(tag);
-        if(field.isEmpty()) return -999999999;
-        int value=parseInt(buffer+field.offset,buffer+field.offset+field.length);
-        return value;
-    }
-    inline std::string_view getString(uint32_t tag) const {
-        auto field = map->get(tag);
-        if(field.isEmpty()) return "";
-        auto start = buffer+field.offset;
-        return std::string_view(start,field.length);
-    }
-    template<int nPlaces=7> inline Fixed<nPlaces> getFixed(uint32_t tag) const {
-        auto field = map->get(tag);
-        if(field.isEmpty()) return Fixed<nPlaces>::NaN();
-        auto start = buffer+field.offset;
-        return Fixed(std::string_view(start,field.length));
-    }
-    inline int getInt(uint32_t groupTag, uint32_t index, uint32_t tag) const {
-        auto& grp = map->getGroup(groupTag,index);
-        auto field = grp.get(tag);
-        if(field.isEmpty()) return -999999999;
-        int value=parseInt(buffer+field.offset,buffer+field.offset+field.length);
-        return value;
-    }
-    inline std::string_view getString(uint32_t groupTag, uint32_t index, uint32_t tag) const {
-        auto& grp = map->getGroup(groupTag,index);
-        auto field = grp.get(tag);
-        if(field.isEmpty()) return "";
-        auto start = buffer+field.offset;
-        return std::string_view(start,field.length);
-    }
-    template<int nPlaces=7> inline Fixed<nPlaces> getFixed(uint32_t groupTag, uint32_t index, uint32_t tag) const {
-        auto& grp = map->getGroup(groupTag,index);
-        auto field = grp.get(tag);
-        if(field.isEmpty()) return Fixed<nPlaces>::NaN();
-        auto start = buffer+field.offset;
-        return Fixed(std::string_view(start,field.length));
-    }
-    std::vector<uint32_t> getTags() const {
-        return map->tags();
-    }
-    std::vector<uint32_t> getTags(uint32_t groupTag, int index) const {
-        auto& grp = map->getGroup(groupTag,index);
-        return grp.tags();
-    }
 };

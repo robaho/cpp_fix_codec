@@ -9,102 +9,49 @@
 #include <vector>
 
 #include "fix_alloc.h"
+#include "fixed.h"
+
+class FieldMap;
 
 struct Field {
     uint32_t tag;
     int offset;
     int length;
-    bool isEmpty() {
+    // groups is != nullptr when this is a Group tag
+    FieldMap* groups = nullptr;
+    bool isEmpty() const {
         return tag==0;
+    }
+    bool isGroup() const {
+        return groups!=nullptr;
     }
     constexpr Field() : tag(0),offset(0),length(0){}
     Field(uint32_t tag,int offset,int length) : tag(tag),offset(offset),length(length){}
+    Field(uint32_t tag,int offset,int length,FieldMap* group) : tag(tag),offset(offset),length(length),groups(group){}
     Field(const Field& other) {
         tag = other.tag;
         offset = other.offset;
         length = other.length;
     }
-    static const Field EMPTY;
+    Field(Field&& other) {
+        tag = other.tag;
+        offset = other.offset;
+        length = other.length;
+        groups = other.groups;
+        other.groups = nullptr;
+    }
+    Field& operator=(const Field& other) {
+        tag = other.tag;
+        offset = other.offset;
+        length = other.length;
+        return *this;
+    }
+    const static Field EMPTY;
+    FieldMap* group(int n) const;
+    int groupCount() const;
 };
 
 class FieldMap;
-
-struct Group {
-    const uint32_t tag;
-    const int count;
-    // linked via 'next' property in FieldMap
-    FieldMap* const groups;
-    int size;
-    Group(uint32_t tag,int count,FieldMap* group) : tag(tag), count(count), groups(group){
-        size=1;
-    }
-    constexpr Group() : tag(0), count(0), groups(nullptr) {}
-    static const Group EMPTY;
-    FieldMap* group(int n) const;
-};
-
-struct FieldOrGroup {
-private:
-    bool _group = false;
-    union FieldType {
-        FieldType() {}
-        Field field;
-        Group group;
-    } fg;
-public:
-    uint32_t tag;
-    bool isGroup() {
-        return _group;
-    }
-    bool isField() {
-        return !_group;
-    }
-    Group& group() {
-        return fg.group;
-    }
-    const Field& field() {
-        return fg.field;
-    }
-    FieldOrGroup(const Group& group) : _group(true), tag(group.tag) {
-        new(&fg.group) Group(group);
-    }
-    FieldOrGroup(const Field& field) : _group(false), tag(field.tag) {
-        new(&fg.group) Field(field);
-    }
-    FieldOrGroup(const FieldOrGroup& other) : _group(other._group), tag(other.tag) {
-        if (_group) {
-            new(&fg.group) Group(other.fg.group);
-        } else {
-            new(&fg.field) Field(other.fg.field);
-        }
-    }
-    FieldOrGroup(FieldOrGroup&& other) noexcept : _group(other._group), tag(other.tag) {
-        if (_group) {
-            new(&fg.group) Group(std::move(other.fg.group));
-        } else {
-            new(&fg.field) Field(std::move(other.fg.field));
-        }
-        other._group = false;
-        other.tag = 0;
-    }
-    FieldOrGroup& operator=(const FieldOrGroup& other) {
-        if (this != &other) {
-            if (_group) {
-                fg.group.~Group();
-            } else {
-                fg.field.~Field();
-            }
-            _group = other._group;
-            tag = other.tag;
-            if (_group) {
-                new(&fg.group) Group(other.fg.group);
-            } else {
-                new(&fg.field) Field(other.fg.field);
-            }
-        }
-        return *this;
-    }
-};
 
 // a linear search actually performs better than a binary search for both
 // parsing and access since the locality is near perfect, and the message sizes
@@ -116,9 +63,9 @@ public:
 class FieldList {
     // using linear search
   private:
-    using VecAllocatorType = FixAllocator<FieldOrGroup>;
+    using VecAllocatorType = FixAllocator<Field>;
 
-    std::vector<FieldOrGroup, VecAllocatorType> list;
+    std::vector<Field, VecAllocatorType> list;
 
   public:
     FieldList(FixBuffer &buffer) : list(VecAllocatorType(buffer)) {
@@ -126,19 +73,19 @@ class FieldList {
     }
 
     // add or replace a field/group in the list
-    FieldOrGroup &put(const FieldOrGroup &fg) {
+    Field &put(const Field &fg) {
         for (auto itr = list.begin(); itr != list.end(); itr++) {
             if (itr->tag == fg.tag) {
-              *itr = std::move(fg);
+              *itr = fg;
               return *itr;
             }
         }
-        list.push_back(std::move(fg));
+        list.push_back(fg);
         return list.back();
     }
 
     // get a field/group in the list by tag, or throw exception if it does not exist
-    FieldOrGroup &get(const uint32_t tag) {
+    Field &get(const uint32_t tag) {
         for (auto itr = list.begin(); itr != list.end(); itr++) {
             if (itr->tag == tag) {
               return *itr;
@@ -156,10 +103,10 @@ class FieldList {
         return false;
     }
     // find a field/group is in the list
-    FieldOrGroup *find(const uint32_t tag) const {
+    Field *find(const uint32_t tag) const {
         for (auto itr = list.begin(); itr != list.end(); itr++) {
             if (itr->tag == tag) {
-              return const_cast<FieldOrGroup *>(&(*itr));
+              return const_cast<Field *>(&(*itr));
             }
         }
         return nullptr;
@@ -172,27 +119,26 @@ class FieldList {
         }
         return tags;
     }
-
 };
 
 #else
 class FieldList {
     // using sorted map
   private:
-    using AllocatorType = FieldMapAllocator<std::pair<const uint32_t,FieldOrGroup>>;
-    std::map<uint32_t,FieldOrGroup,std::less<uint32_t>,AllocatorType> list;
+    using AllocatorType = FixAllocator<std::pair<const uint32_t,Field>>;
+    std::map<uint32_t,Field,std::less<uint32_t>,AllocatorType> list;
   public:
-    FieldList(FieldMapBuffer &buffer) : list(AllocatorType(buffer)) {
+    FieldList(FixBuffer &buffer) : list(AllocatorType(buffer)) {
     }
 
     // add or replace a field/group in the list
-    FieldOrGroup &put(const FieldOrGroup &fg) {
+    Field &put(const Field &fg) {
         auto pair = list.insert_or_assign(fg.tag,fg);
         return pair.first->second;
     }
 
     // get a field/group in the list by tag, or throw exception if it does not exist
-    FieldOrGroup &get(const uint32_t tag) {
+    Field &get(const uint32_t tag) {
         return list.at(tag);
     }
     // determine if a field/group is in the list
@@ -200,10 +146,10 @@ class FieldList {
         return list.contains(tag);
     }
     // find a field/group is in the list
-    FieldOrGroup *find(const uint32_t tag) const {
+    Field *find(const uint32_t tag) const {
         auto itr = list.find(tag);
         if(itr==list.end()) return nullptr;
-        return const_cast<FieldOrGroup*>(&itr->second);
+        return const_cast<Field*>(&itr->second);
     }
     std::vector<uint32_t> tags() const {
         std::vector<uint32_t> tags;
@@ -216,14 +162,30 @@ class FieldList {
 };
 #endif
 
+static inline int parseInt(const char *start,const char* endExclusive) {
+    int value=0;
+    bool negate=false;
+    if(*start=='-') { negate=true; start++; }
+    while(start!=endExclusive) {
+        value *= 10;
+        value += *start - '0';
+        start++;
+    }
+    return negate ? value * -1 : value;
+}
+
 class FieldMap {
-friend struct Group;
+friend struct Field;
+friend class FieldAccessor;
+
     FixBuffer& buffer;
+    // ptr back to raw message data
+    const char* msgBytes;
     FieldList map;
     // next allows for efficient linking in a Group
     FieldMap *next = nullptr;
 public:
-    FieldMap(FixBuffer& buffer) : buffer(buffer), map(buffer){}
+    FieldMap(FixBuffer& buffer,const char* msgBytes) : buffer(buffer), msgBytes(msgBytes), map(buffer){}
     /**
      * @brief add a group to the FieldMap
      * 
@@ -242,24 +204,80 @@ public:
     void set(uint32_t tag, const Field& field);
     const Field& get(uint32_t tag) const;
     const FieldMap& getGroup(uint32_t tag,int index) const;
-    // returns the number of groups expected 
-    int getGroupCount(uint32_t tag) const;
-    // returns the number of groups added 
-    int getGroupSize(uint32_t tag) const;
     std::vector<uint32_t> tags() const {
         return map.tags();
     }
+    int getInt(uint32_t tag) const {
+        auto field = get(tag);
+        if(field.isEmpty()) throw std::runtime_error("tag does not exist");
+        int value=parseInt(msgBytes+field.offset,msgBytes+field.offset+field.length);
+        return value;
+    }
+    int getInt(const Field& field) const {
+        if(field.isEmpty()) throw std::runtime_error("tag does not exist");
+        int value=parseInt(msgBytes+field.offset,msgBytes+field.offset+field.length);
+        return value;
+    }
 };
 
-static inline int parseInt(const char *start,const char* endExclusive) {
-    int value=0;
-    bool negate=false;
-    if(*start=='-') { negate=true; start++; }
-    while(start!=endExclusive) {
-        value *= 10;
-        value += *start - '0';
-        start++;
+// all FieldAccessor methods are only valid for the lifetime of the source message
+class FieldAccessor {
+friend class FixMessage;
+private:
+    const FieldMap * map;
+    const char *msgBytes;
+    FieldAccessor(const FieldMap *map) : map(map), msgBytes(map->msgBytes){}
+    FieldAccessor(){}
+    void reset(const FieldMap* map) {
+        this->map = map;
+        this->msgBytes = map->msgBytes;
     }
-    return negate ? value * -1 : value;
-}
-
+public:
+    inline int getInt(uint32_t tag) const {
+        return map->getInt(tag);
+    }
+    inline std::string_view getString(uint32_t tag) const {
+        auto field = map->get(tag);
+        if(field.isEmpty()) return "";
+        auto start = msgBytes+field.offset;
+        return std::string_view(start,field.length);
+    }
+    template<int nPlaces=7> inline Fixed<nPlaces> getFixed(uint32_t tag) const {
+        auto field = map->get(tag);
+        if(field.isEmpty()) return Fixed<nPlaces>::NaN();
+        auto start = msgBytes+field.offset;
+        return Fixed(std::string_view(start,field.length));
+    }
+    inline int getInt(uint32_t groupTag, uint32_t index, uint32_t tag) const {
+        auto& grp = map->getGroup(groupTag,index);
+        auto field = grp.get(tag);
+        if(field.isEmpty()) return -999999999;
+        int value=parseInt(msgBytes+field.offset,msgBytes+field.offset+field.length);
+        return value;
+    }
+    inline std::string_view getString(uint32_t groupTag, uint32_t index, uint32_t tag) const {
+        auto& grp = map->getGroup(groupTag,index);
+        auto field = grp.get(tag);
+        if(field.isEmpty()) return "";
+        auto start = msgBytes+field.offset;
+        return std::string_view(start,field.length);
+    }
+    inline const FieldAccessor getGroup(uint32_t groupTag,uint32_t index) {
+        auto& grp = map->getGroup(groupTag,index);
+        return FieldAccessor(&grp);
+    }
+    template<int nPlaces=7> inline Fixed<nPlaces> getFixed(uint32_t groupTag, uint32_t index, uint32_t tag) const {
+        auto& grp = map->getGroup(groupTag,index);
+        auto field = grp.get(tag);
+        if(field.isEmpty()) return Fixed<nPlaces>::NaN();
+        auto start = msgBytes+field.offset;
+        return Fixed(std::string_view(start,field.length));
+    }
+    std::vector<uint32_t> getTags() const {
+        return map->tags();
+    }
+    std::vector<uint32_t> getTags(uint32_t groupTag, int index) const {
+        auto& grp = map->getGroup(groupTag,index);
+        return grp.tags();
+    }
+};

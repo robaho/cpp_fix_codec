@@ -22,9 +22,9 @@ void accessFields(const char *text,GroupDefs &defs) {
     Fixed total(0);
 
     for(int i=0;i<N_ITRS;i++) {
-        auto sec = msg.getString(value(Tags::SYMBOL));
-        auto price = msg.getFixed(value(Tags::PRICE));
-        auto qty = msg.getFixed(value(Tags::ORDER_QTY));
+        auto sec = msg.getString(tagValue(Tags::SYMBOL));
+        auto price = msg.getFixed(tagValue(Tags::PRICE));
+        auto qty = msg.getFixed(tagValue(Tags::ORDER_QTY));
         if(sec=="AMZN") {
             total = total + price + qty;
         }
@@ -45,6 +45,6 @@ int main(int argc,char **argv) {
     char buffer[4096];
     GroupDefs defs;
     std::cout << "New Order Single Limit: ";
-    sampleToBuffer(SAMPLE_NEW_ORDER_SINGLE_LIMIT_ORDER,buffer);
+    decodeFixToBuffer(SAMPLE_NEW_ORDER_SINGLE_LIMIT_ORDER,buffer);
     accessFields(buffer,defs);
 }
