@@ -119,17 +119,17 @@ BOOST_AUTO_TEST_CASE(time_field) {
     builder.addTime(60,tv_time);
     auto msg = builder.messageView();
 
-    auto expected = "20231225-13:25:59.567\x01";
+    auto expected = "20231225-13:25:59.567^A";
 
-    BOOST_TEST(msg.find(expected)!=std::string::npos,encodeFix(msg));
+    BOOST_TEST(encodeFix(msg).find(expected)!=std::string::npos,encodeFix(msg));
 }
 
 BOOST_AUTO_TEST_CASE(fixed_field) {
     FixBuilder builder;
     builder.addField(44,Fixed("12345.6789"));
 
-    auto expected = "44=12345.6789\x01";
+    auto expected = "44=12345.6789^A";
     auto msg = builder.messageView();
 
-    BOOST_TEST(msg.find(expected)!=std::string::npos,encodeFix(msg));
+    BOOST_TEST(encodeFix(msg).find(expected)!=std::string::npos,encodeFix(msg));
 }
