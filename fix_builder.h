@@ -162,10 +162,34 @@ public:
   }
   void addBuilder(const FixBuilder &builder);
   // write message to fd and reset
-  void writeTo(int fd);
+  void writeTo(int fd) {
+    if (bodyLenStart) {
+      // write the body length into the already reserved space, must use
+      // addTag(9,"00000"); to reserve
+      itoa(bodyLength, bodyLenStart, bodyLenEnd - bodyLenStart);
+    }
+    addCheckSum();
+    int len = cp-message;
+    if(write(fd,message,len)!=len) {
+        throw std::runtime_error("unable to write message on fd");
+    }
+    reset();
+  }
   // write message to ostream and reset
-  void writeTo(std::ostream out);
-  // returns a view into the message only valid until reset() is called
+  void writeTo(std::ostream out) {
+    if (bodyLenStart) {
+      // write the body length into the already reserved space, must use
+      // addTag(9,"00000"); to reserve
+      itoa(bodyLength, bodyLenStart, bodyLenEnd - bodyLenStart);
+    }
+    addCheckSum();
+    int len = cp-message;
+    out.write(message,len);
+    if(out.fail()) {
+        throw std::runtime_error("unable to write message on fd");
+    }
+    reset();
+  }
   const std::string_view messageView() {
     if (bodyLenStart) {
       // write the body length into the already reserved space, must use
