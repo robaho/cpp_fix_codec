@@ -162,7 +162,13 @@ public:
       bodyLength += (cp - cpBegin);
     }
   }
-  void addBuilder(const FixBuilder &builder);
+  // Add fields from the src FixBuilder to this, and reset the src. The src should not contain the standard header fields.
+  void addBuilder(FixBuilder &src) {
+    int len = src.cp-src.message;
+    memcpy(cp,src.message,len);
+    cp+=len;
+    src.reset();
+  }
   // write message to fd and reset
   void writeTo(int fd) {
     if (bodyLenStart) {
