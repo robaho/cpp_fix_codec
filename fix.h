@@ -1,5 +1,6 @@
 #pragma once
 #include <string>
+#include "fixed.h"
 
 enum class Tags {
     MSG_TYPE = 35,
@@ -54,3 +55,6 @@ const static std::string MASS_QUOTE_ACKNOWLEDGEMENT = "b";
 static int tagValue(Tags type) {
     return static_cast<int>(type);
 }
+
+typedef Fixed<7> F;
+
