@@ -167,6 +167,7 @@ public:
     int len = src.cp-src.message;
     memcpy(cp,src.message,len);
     cp+=len;
+    if(bodyLenStart!=nullptr) bodyLength+=len;
     src.reset();
   }
   // write message to fd and reset
