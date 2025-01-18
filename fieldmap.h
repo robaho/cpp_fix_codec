@@ -91,7 +91,7 @@ class FieldList {
               return *itr;
             }
         }
-        throw std::runtime_error("tag does not exist");
+        throw std::runtime_error(std::string("tag does not exist ")+std::to_string(tag));
     }
     // determine if a field/group is in the list
     bool contains(const uint32_t tag) const {
@@ -209,12 +209,12 @@ public:
     }
     int getInt(uint32_t tag) const {
         auto field = get(tag);
-        if(field.isEmpty()) throw std::runtime_error("tag does not exist");
+        if(field.isEmpty()) throw std::runtime_error(std::string("tag does not exist ")+std::to_string(tag));
         int value=parseInt(msgBytes+field.offset,msgBytes+field.offset+field.length);
         return value;
     }
     int getInt(const Field& field) const {
-        if(field.isEmpty()) throw std::runtime_error("tag does not exist");
+        if(field.isEmpty()) throw std::runtime_error(std::string("tag does not exist ")+std::to_string(field.tag));
         int value=parseInt(msgBytes+field.offset,msgBytes+field.offset+field.length);
         return value;
     }
