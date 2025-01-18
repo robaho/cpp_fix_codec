@@ -8,6 +8,7 @@
 #include <string_view>
 #include <charconv>
 #include <istream>
+#include "fix.h"
 #include "fixed.h"
 #include "fieldmap.h"
 
@@ -55,4 +56,6 @@ public:
     static void parse(std::istream &in,FixMessage &msg, const GroupDefs &defs);
     // convience method for testing to parse parse a message from a buffer, delegates to parse using istream
     static void parse(const char* in,FixMessage &msg, const GroupDefs &defs);
+    // convenience method to get the message type
+    std::string_view msgType() const { return getString(tagValue(Tags::MSG_TYPE)); };
 };
