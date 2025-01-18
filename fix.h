@@ -48,6 +48,8 @@ const static std::string LIST_STATUS = "N";
 const static std::string LIST_EXECUTE = "L";
 const static std::string LIST_CANCEL_REQUEST = "K";
 const static std::string LIST_STATUS_REQUEST = "M";
+const static std::string MASS_QUOTE = "i";
+const static std::string MASS_QUOTE_ACKNOWLEDGEMENT = "b";
 
 static int tagValue(Tags type) {
     return static_cast<int>(type);
