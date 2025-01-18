@@ -58,4 +58,7 @@ public:
     static void parse(const char* in,FixMessage &msg, const GroupDefs &defs);
     // convenience method to get the message type
     std::string_view msgType() const { return getString(tagValue(Tags::MSG_TYPE)); };
+    // convenience method to get the sequence number
+    int seqNum() const { return getInt(tagValue(Tags::SEQ_NUM)); };
+
 };

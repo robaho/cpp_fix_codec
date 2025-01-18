@@ -3,6 +3,7 @@
 
 enum class Tags {
     MSG_TYPE = 35,
+    SEQ_NUM = 34,
     SENDER_COMP_ID = 49,
     TARGET_COMP_ID = 56,
     SENDING_TIME = 52,
