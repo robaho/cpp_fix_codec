@@ -1,6 +1,4 @@
 -std=c++20
 -I
 .
--I
-/Users/robertengels/cpp_leveldb/include
 --language=c++
