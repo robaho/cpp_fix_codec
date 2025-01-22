@@ -8,7 +8,7 @@ It uses [cpp_fixed](https://github.com/robaho/cpp_fixed) to perform fixed decima
 
 Remove `fixed.h` , and run `make all` to obtain the latest version of the fixed point decimal library.
 
-The project builds by default using `make` and CLang. There is a `Makefile.gcc` for building using GCC.
+The project builds by default using `make` and CLang. There is a `Makefile.gcc` for building using GCC.make
 
 ## Design
 

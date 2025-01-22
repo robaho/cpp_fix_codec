@@ -18,7 +18,7 @@ OBJS = $(addprefix bin/, $(SRCS:.cpp=.o))
 MAIN = bin/fix_parser_test
 MAIN_OBJ = ${basename ${MAIN}}.o
 
-LIB = bin/fix.a
+LIB = bin/fix_codec.a
 
 fixed.h:
 	curl -o fixed.h https://raw.githubusercontent.com/robaho/cpp_fixed/main/fixed.h
