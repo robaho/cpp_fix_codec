@@ -1,5 +1,5 @@
 CXX = clang++
-INCLUDES = 
+INCLUDES = -I ../cpp_fixed
 # CXXFLAGS = -std=c++20 -O0 -Wall -fsanitize=address -fno-omit-frame-pointer -pedantic-errors -g ${INCLUDES}
 # CXXFLAGS = -std=c++20 -Wall -pedantic-errors -g ${INCLUDES}
 CXXFLAGS = -std=c++20 -O3 -Wall -pedantic-errors -g ${INCLUDES}
@@ -10,7 +10,7 @@ TEST_SRCS = ${wildcard *_test.cpp}
 TEST_OBJS = $(addprefix bin/, $(TEST_SRCS:.cpp=.o))
 TEST_MAINS = $(addprefix bin/, $(TEST_SRCS:.cpp=))
 
-HEADERS = ${wildcard *.h} fixed.h
+HEADERS = ${wildcard *.h}
 
 SRCS = fix_parser.cpp fieldmap.cpp fix_builder.cpp
 
@@ -20,9 +20,6 @@ MAIN = bin/fix_parser_test
 MAIN_OBJ = ${basename ${MAIN}}.o
 
 LIB = bin/fix_codec.a
-
-fixed.h:
-	curl -o fixed.h https://raw.githubusercontent.com/robaho/cpp_fixed/main/fixed.h
 
 .PRECIOUS: bin/%.o
 
