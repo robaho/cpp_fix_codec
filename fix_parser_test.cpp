@@ -20,6 +20,7 @@ BOOST_AUTO_TEST_CASE( basic_parsing ) {
     FixMessage::parse(buffer,msg, defs);
     BOOST_TEST(msg.getFixed(Tag::PRICE)=="0.01");
     BOOST_TEST(msg.getFixed(Tag::ORDER_QTY)==170);
+    BOOST_TEST(msg.getChar(40)=='1');
 }
 
 // test parsing a message where the group_end_tag but it is not in a group because the group count was not seen

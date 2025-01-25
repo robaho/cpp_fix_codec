@@ -221,6 +221,11 @@ public:
         int value=parseInt(msgBytes+field.offset,msgBytes+field.offset+field.length);
         return value;
     }
+    char getChar(uint32_t tag) const {
+        auto field = get(tag);
+        if(field.isEmpty()) throw std::runtime_error(std::string("tag does not exist ")+std::to_string(tag));
+        return *(msgBytes+field.offset);
+    }
     long getLong(uint32_t tag) const {
         auto field = get(tag);
         if(field.isEmpty()) throw std::runtime_error(std::string("tag does not exist ")+std::to_string(tag));
@@ -249,6 +254,9 @@ private:
 public:
     inline int getInt(uint32_t tag) const {
         return map->getInt(tag);
+    }
+    inline char getChar(uint32_t tag) const {
+        return map->getChar(tag);
     }
     inline long getLong(uint32_t tag) const {
         return map->getLong(tag);
