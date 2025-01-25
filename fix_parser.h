@@ -57,8 +57,8 @@ public:
     // convience method for testing to parse parse a message from a buffer, delegates to parse using istream
     static void parse(const char* in,FixMessage &msg, const GroupDefs &defs);
     // convenience method to get the message type
-    std::string_view msgType() const { return getString(tagValue(Tags::MSG_TYPE)); };
+    std::string_view msgType() const { return getString(Tag::MSG_TYPE); };
     // convenience method to get the sequence number
-    int seqNum() const { return getInt(tagValue(Tags::SEQ_NUM)); };
+    int seqNum() const { return getInt(Tag::SEQ_NUM); };
 
 };

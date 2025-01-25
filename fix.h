@@ -2,7 +2,7 @@
 #include <string>
 #include "fixed.h"
 
-enum class Tags {
+enum Tag : int {
     MSG_TYPE = 35,
     SEQ_NUM = 34,
     SENDER_COMP_ID = 49,
@@ -28,7 +28,7 @@ enum class Tags {
     AVG_PX = 6,
     TEXT = 58,
     BODY_LENGTH = 9,
-    CHECK_SUM = 10
+    CHECK_SUM = 10,
 };
 
 const static std::string NEW_ORDER_SINGLE = "D";
@@ -51,10 +51,6 @@ const static std::string LIST_CANCEL_REQUEST = "K";
 const static std::string LIST_STATUS_REQUEST = "M";
 const static std::string MASS_QUOTE = "i";
 const static std::string MASS_QUOTE_ACKNOWLEDGEMENT = "b";
-
-static int tagValue(Tags type) {
-    return static_cast<int>(type);
-}
 
 typedef Fixed<7> F;
 

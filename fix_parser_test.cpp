@@ -28,7 +28,7 @@ BOOST_AUTO_TEST_CASE( group_end_tag ) {
     FixMessage msg;
     decodeFixToBuffer(SAMPLE_NEW_ORDER_SINGLE,buffer);
     FixMessage::parse(buffer,msg, defs);
-    BOOST_TEST(msg.getString(tagValue(Tags::MSG_TYPE))==NEW_ORDER_SINGLE);
+    BOOST_TEST(msg.getString(Tag::MSG_TYPE)==NEW_ORDER_SINGLE);
 }
 
 BOOST_AUTO_TEST_CASE( group_parsing ) {
@@ -39,7 +39,7 @@ BOOST_AUTO_TEST_CASE( group_parsing ) {
     FixMessage msg;
     decodeFixToBuffer(SAMPLE_NEW_ORDER_SINGLE_WITH_GROUP,buffer);
     FixMessage::parse(buffer,msg,defs);
-    BOOST_TEST(msg.getString(tagValue(Tags::MSG_TYPE))==NEW_ORDER_SINGLE);
+    BOOST_TEST(msg.getString(Tag::MSG_TYPE)==NEW_ORDER_SINGLE);
     BOOST_TEST(msg.getString(100,0,55)=="AAPL");
     BOOST_TEST(msg.getString(100,1,55)=="MSFT");
 }
@@ -55,10 +55,10 @@ BOOST_AUTO_TEST_CASE( stream_parsing ) {
 
     FixMessage msg;
     FixMessage::parse(ss,msg,defs);
-    BOOST_TEST(msg.getString(tagValue(Tags::MSG_TYPE))==NEW_ORDER_SINGLE);
+    BOOST_TEST(msg.getString(Tag::MSG_TYPE)==NEW_ORDER_SINGLE);
     FixMessage::parse(ss,msg,defs);
-    BOOST_TEST(msg.getString(tagValue(Tags::MSG_TYPE))==ORDER_CANCEL_REPLACE_REQUEST);
+    BOOST_TEST(msg.getString(Tag::MSG_TYPE)==ORDER_CANCEL_REPLACE_REQUEST);
     FixMessage::parse(ss,msg,defs);
-    BOOST_TEST(msg.getString(tagValue(Tags::MSG_TYPE))==NEW_ORDER_SINGLE);
+    BOOST_TEST(msg.getString(Tag::MSG_TYPE)==NEW_ORDER_SINGLE);
 }
 

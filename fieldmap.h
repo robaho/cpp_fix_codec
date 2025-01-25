@@ -8,6 +8,7 @@
 #include <variant>
 #include <vector>
 
+#include "fix.h"
 #include "fix_alloc.h"
 #include "fixed.h"
 
@@ -83,7 +84,6 @@ class FieldList {
         list.push_back(fg);
         return list.back();
     }
-
     // get a field/group in the list by tag, or throw exception if it does not exist
     Field &get(const uint32_t tag) {
         for (auto itr = list.begin(); itr != list.end(); itr++) {
@@ -174,6 +174,18 @@ static inline int parseInt(const char *start,const char* endExclusive) {
     return negate ? value * -1 : value;
 }
 
+static inline long parseLong(const char *start,const char* endExclusive) {
+    long value=0;
+    bool negate=false;
+    if(*start=='-') { negate=true; start++; }
+    while(start!=endExclusive) {
+        value *= 10;
+        value += *start - '0';
+        start++;
+    }
+    return negate ? value * -1 : value;
+}
+
 class FieldMap {
 friend struct Field;
 friend class FieldAccessor;
@@ -213,6 +225,12 @@ public:
         int value=parseInt(msgBytes+field.offset,msgBytes+field.offset+field.length);
         return value;
     }
+    long getLong(uint32_t tag) const {
+        auto field = get(tag);
+        if(field.isEmpty()) throw std::runtime_error(std::string("tag does not exist ")+std::to_string(tag));
+        int value=parseLong(msgBytes+field.offset,msgBytes+field.offset+field.length);
+        return value;
+    }
     int getInt(const Field& field) const {
         if(field.isEmpty()) throw std::runtime_error(std::string("tag does not exist ")+std::to_string(field.tag));
         int value=parseInt(msgBytes+field.offset,msgBytes+field.offset+field.length);
@@ -235,6 +253,9 @@ private:
 public:
     inline int getInt(uint32_t tag) const {
         return map->getInt(tag);
+    }
+    inline long getLong(uint32_t tag) const {
+        return map->getLong(tag);
     }
     inline std::string_view getString(uint32_t tag) const {
         auto field = map->get(tag);
@@ -272,9 +293,6 @@ public:
         if(field.isEmpty()) return Fixed<nPlaces>::NaN();
         auto start = msgBytes+field.offset;
         return Fixed(std::string_view(start,field.length));
-    }
-    std::vector<uint32_t> getTags() const {
-        return map->tags();
     }
     std::vector<uint32_t> getTags(uint32_t groupTag, int index) const {
         auto& grp = map->getGroup(groupTag,index);

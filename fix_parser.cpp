@@ -54,7 +54,7 @@ void FixMessage::parse(std::istream& in, FixMessage &msg, const GroupDefs &defs)
         int offset = start-msgBytes;
         int length = cp-start;
 
-        if(tag==tagValue(Tags::CHECK_SUM)) {
+        if(tag==Tag::CHECK_SUM) {
             if(end-cp!=1) {
                 throw std::runtime_error("invalid state, buffered data not read");
             }
@@ -63,14 +63,14 @@ void FixMessage::parse(std::istream& in, FixMessage &msg, const GroupDefs &defs)
 
         map->set(tag,Field(tag,offset,length));
 
-        if(tag==tagValue(Tags::BODY_LENGTH)) {
+        if(tag==Tag::BODY_LENGTH) {
             // the body length does not include the 10=NNN^A portion which must be included
             auto bodyLength = msg.getInt(tag);
             int toread = (bodyLength+7) - (end-cp); // remove any data already buffered
             if(!in.read(end, toread)) return;
             end+=toread;
         }
-        if(tag==tagValue(Tags::MSG_TYPE)) {
+        if(tag==Tag::MSG_TYPE) {
             auto msgType = msg.getString(tag);
             msgGroups = defs.defs(msgType);
         }

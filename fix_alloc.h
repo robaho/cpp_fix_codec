@@ -1,7 +1,6 @@
 #pragma once
 
-#include <memory>
-#include <iostream>
+#include <stdexcept>    
 
 class FixBuffer {
     char* buffer;
@@ -10,6 +9,9 @@ class FixBuffer {
 public:
     const int length;
     FixBuffer(int length) : buffer((char*)malloc(length)), length(length){}
+    ~FixBuffer() {
+        free(buffer);
+    }
     void *allocate(int n) {
         if(offset+n >= buffer+length) {
             throw std::runtime_error("FieldMapBuffer exhausted");

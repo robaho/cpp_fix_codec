@@ -22,9 +22,9 @@ void accessFields(const char *text,GroupDefs &defs) {
     Fixed total(0);
 
     for(int i=0;i<N_ITRS;i++) {
-        auto sec = msg.getString(tagValue(Tags::SYMBOL));
-        auto price = msg.getFixed(tagValue(Tags::PRICE));
-        auto qty = msg.getFixed(tagValue(Tags::ORDER_QTY));
+        auto sec = msg.getString(Tag::SYMBOL);
+        auto price = msg.getFixed(Tag::PRICE);
+        auto qty = msg.getFixed(Tag::ORDER_QTY);
         if(sec=="AMZN") {
             total = total + price + qty;
         }
