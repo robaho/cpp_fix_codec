@@ -123,6 +123,20 @@ class FixBuilder {
             bodyLength += (cp - cpBegin);
         }
     }
+    inline void addField(uint32_t tag, const char value) {
+        char *cpBegin = cp;
+        auto start = itoa(tag);
+        auto len = sizeof(tmp) - (start - tmp);
+        memcpy(cp, start, len);
+        cp += len;
+        *cp++ = '=';
+        len = 1;
+        *cp++ = value;
+        *cp++ = '\x01';
+        if (bodyLenStart != nullptr) {
+            bodyLength += (cp - cpBegin);
+        }
+    }
     inline void addField(uint32_t tag, const long value) {
         char *cpBegin = cp;
         auto start = itoa(tag);

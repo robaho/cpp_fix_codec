@@ -18,6 +18,13 @@ BOOST_AUTO_TEST_CASE( add_int_tag ) {
     builder.addField(9,1234);
     BOOST_TEST(encodeFix(builder.messageView())=="9=1234^A10=065^A");
 }
+BOOST_AUTO_TEST_CASE( add_char_tag ) {
+    FixBuilder builder;
+
+    builder.addField(9,1234);
+    builder.addField(20,char('I'));
+    BOOST_TEST(encodeFix(builder.messageView())=="9=1234^A20=I^A10=042^A");
+}
 
 BOOST_AUTO_TEST_CASE( body_length ) {
     FixBuilder builder;
