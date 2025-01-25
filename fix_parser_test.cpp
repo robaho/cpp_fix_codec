@@ -3,7 +3,6 @@
 #include <sstream>
 
 #include "fix.h"
-#include "fixed.h"
 #include "fix_parser.h"
 #include "samples.h"
 
@@ -17,6 +16,10 @@ BOOST_AUTO_TEST_CASE( basic_parsing ) {
     decodeFixToBuffer(SAMPLE_CANCEL_REPLACE_QTY_CHANGE,buffer);
     FixMessage::parse(buffer,msg, defs);
     BOOST_TEST(msg.getFixed(44)=="25.47");
+    decodeFixToBuffer(SAMPLE_LIMIT_ORDER,buffer);
+    FixMessage::parse(buffer,msg, defs);
+    BOOST_TEST(msg.getFixed(Tag::PRICE)=="0.01");
+    BOOST_TEST(msg.getFixed(Tag::ORDER_QTY)==170);
 }
 
 // test parsing a message where the group_end_tag but it is not in a group because the group count was not seen

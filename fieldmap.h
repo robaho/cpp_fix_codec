@@ -2,13 +2,9 @@
 
 #include <_types/_uint32_t.h>
 #include <cstdint>
-#include <map>
-#include <iostream>
 #include <stdexcept>
-#include <variant>
 #include <vector>
 
-#include "fix.h"
 #include "fix_alloc.h"
 #include "fixed.h"
 
@@ -269,6 +265,9 @@ public:
         auto start = msgBytes+field.offset;
         return Fixed(std::string_view(start,field.length));
     }
+    std::vector<uint32_t> tags() const {
+        return map->tags();
+    }
     inline int getInt(uint32_t groupTag, uint32_t index, uint32_t tag) const {
         auto& grp = map->getGroup(groupTag,index);
         auto field = grp.get(tag);
@@ -294,7 +293,7 @@ public:
         auto start = msgBytes+field.offset;
         return Fixed(std::string_view(start,field.length));
     }
-    std::vector<uint32_t> getTags(uint32_t groupTag, int index) const {
+    std::vector<uint32_t> tags(uint32_t groupTag, int index) const {
         auto& grp = map->getGroup(groupTag,index);
         return grp.tags();
     }

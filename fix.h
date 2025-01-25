@@ -14,6 +14,7 @@ enum Tag : int {
     SYMBOL = 55,
     SIDE = 54,
     ORDER_QTY = 38,
+    ORD_STATUS = 39,
     PRICE = 44,
     ORD_TYPE = 40,
     TIME_IN_FORCE = 59,

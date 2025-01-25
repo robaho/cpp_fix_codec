@@ -2,14 +2,11 @@
 
 #include <unistd.h>
 #include <cstdint>
-#include <variant>
 #include <vector>
 #include <map>
 #include <string_view>
-#include <charconv>
 #include <istream>
 #include "fix.h"
-#include "fixed.h"
 #include "fieldmap.h"
 
 struct GroupDef {
@@ -62,3 +59,10 @@ public:
     int seqNum() const { return getInt(Tag::SEQ_NUM); };
 
 };
+
+inline std::ostream& operator<<(std::ostream &out, const FixMessage &msg) {
+    for (auto tag : msg.tags()) {
+        out << tag << '=' << msg.getString(tag) << '|';
+    }
+    return out;
+}
