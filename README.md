@@ -20,6 +20,10 @@ A custom arena based memory allocator is used, and any dynamic memory is reused 
 
 Nested groups are fully supported.
 
+## Testing
+
+use `make run_tests` to run all of the test cases.
+
 ## Performance
 
 Using a 4 GHz Quad-Core Intel Core i7:
