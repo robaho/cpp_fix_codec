@@ -216,7 +216,7 @@ class FixBuilder {
         reset();
     }
     // write message to ostream and reset
-    void writeTo(std::ostream out) {
+    void writeTo(std::ostream& out) {
         if (bodyLenStart) {
             // write the body length into the already reserved space, must use
             // addTag(9,"00000"); to reserve
